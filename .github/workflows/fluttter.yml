@@ -1,0 +1,57 @@
+name: Build
+on: [push]
+
+jobs:
+  build:
+    name: Forcegague app
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Flutter build
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '2.10.x'
+          channel: 'stable'
+      - run: cd forcegauge
+      - run: flutter pub get
+      - run: flutter build apk
+      # - run: flutter pub get
+      # - run: flutter test
+      # - run: flutter build apk --release --split-per-abi
+      # - run: flutter build appbundle      
+      - run: cp ./build/app/outputs/flutter-apk/app-release.apk ./forcegauge.apk
+
+      - name: Upload app 
+        uses: actions/upload-artifact@v2
+        with:
+          name: forcegauge-app
+          path: ./forcegauge/forcegauge.apk
+
+      # - name: Create a Release in GitHub
+      #   uses: actions/checkout@v2
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     artifacts: "./build/app/outputs/flutter-apk/app-release.apk"
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+
+    #  release:
+    # name: Release app to internal track
+    # needs: [ build ]
+    # runs-on: ubuntu-latest
+    # steps:
+    # - uses: actions/checkout@v1
+    # - name: Get appbundle from artifacts
+    #   uses: actions/download-artifact@v2
+    #   with:
+    #     name: appbundle
+    # - name: Release app to internal track
+    #   uses: r0adkll/upload-google-play@v1
+    #   with:
+    #     serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_ACCOUNT_KEY }}
+    #     packageName: com.fluttercicddemo
+    #     releaseFile: app-release.aab
+    #     track: internal
+    #     whatsNewDirectory: distribution/whatsnew
