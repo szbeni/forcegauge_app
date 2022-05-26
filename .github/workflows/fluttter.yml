@@ -10,11 +10,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Flutter build
+      - name: Get flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '2.10.x'
           channel: 'stable'
+          
+      - name: Build flutter
         run: |
           cd forcegauge
           flutter pub get
