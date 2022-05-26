@@ -15,14 +15,15 @@ jobs:
         with:
           flutter-version: '2.10.x'
           channel: 'stable'
-      - run: cd forcegauge
-      - run: flutter pub get
-      - run: flutter build apk
-      # - run: flutter pub get
-      # - run: flutter test
-      # - run: flutter build apk --release --split-per-abi
-      # - run: flutter build appbundle      
-      - run: cp ./build/app/outputs/flutter-apk/app-release.apk ./forcegauge.apk
+        run: |
+          cd forcegauge
+          flutter pub get
+          flutter build apk
+          cp ./build/app/outputs/flutter-apk/app-release.apk ./forcegauge.apk
+      #   flutter pub get
+      #   flutter test
+      #   flutter build apk --release --split-per-abi
+      #   flutter build appbundle      
 
       - name: Upload app 
         uses: actions/upload-artifact@v2
