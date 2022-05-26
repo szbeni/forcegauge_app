@@ -15,23 +15,47 @@ jobs:
         with:
           flutter-version: '2.10.x'
           channel: 'stable'
-          
+
+      - name: Download Android keystore
+        id: android_keystore
+        uses: timheuer/base64-to-file@v1.0.3
+        with:
+          fileName: key.jks
+          encodedString: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Create key.properties
+        run: |
+          cd forcegauge
+          echo "storeFile=${{ steps.android_keystore.outputs.filePath }}" > android/key.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+
       - name: Build flutter
         run: |
           cd forcegauge
           flutter pub get
-          flutter build apk
-          cp ./build/app/outputs/flutter-apk/app-release.apk ./forcegauge.apk
+          flutter build apk --release --split-per-abi
+          flutter build appbundle
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v2
+        with:
+          name: appbundle
+          path: forcegauge/build/app/outputs/bundle/release/app-release.aab
+
+
+#https://medium.com/@iqan/continuously-releasing-flutter-app-to-play-store-using-github-actions-eca2f5f6e996
+      #    flutter pub get
+      #    flutter build apk
+      #    cp ./build/app/outputs/flutter-apk/app-release.apk ./forcegauge.apk
+
       #   flutter pub get
       #   flutter test
       #   flutter build apk --release --split-per-abi
       #   flutter build appbundle      
 
-      - name: Upload app 
-        uses: actions/upload-artifact@v2
-        with:
-          name: forcegauge-app
-          path: ./forcegauge/forcegauge.apk
+
 
       # - name: Create a Release in GitHub
       #   uses: actions/checkout@v2
@@ -39,6 +63,8 @@ jobs:
       #   with:
       #     artifacts: "./build/app/outputs/flutter-apk/app-release.apk"
       #     token: ${{ secrets.GITHUB_TOKEN }}
+
+
 
     #  release:
     # name: Release app to internal track

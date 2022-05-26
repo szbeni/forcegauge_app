@@ -9,3 +9,5 @@ hw/forcegauge/forcegauge*
 *.mp4
 *.FCStd1
 *.out
+key.properties
+*.jks
