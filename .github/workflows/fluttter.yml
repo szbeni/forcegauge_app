@@ -10,12 +10,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Get flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '2.10.x'
-          channel: 'stable'
-
       - name: Download Android keystore
         id: write_file
         uses: timheuer/base64-to-file@v1.1
@@ -24,6 +18,12 @@ jobs:
           fileDir: './forcegauge/'
           encodedString: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
+      - name: Get flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '2.10.x'
+          channel: 'stable'
+          
       - name: Create key.properties
         run: |
           cd forcegauge
