@@ -11,14 +11,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Test
-        run: echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-
       - name: Download Android keystore
         id: write_file
         uses: timheuer/base64-to-file@v1.1
         with:
           fileName: 'key.jks'
+          fileDir: './forcegauge/'
           encodedString: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
       - name: Get flutter
