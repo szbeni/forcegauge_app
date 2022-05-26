@@ -9,7 +9,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
-
+        run: echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        
       - name: Download Android keystore
         id: write_file
         uses: timheuer/base64-to-file@v1.1
