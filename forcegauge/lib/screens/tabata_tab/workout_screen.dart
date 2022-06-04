@@ -23,15 +23,15 @@ class WorkoutScreen extends StatefulWidget {
 }
 
 class _WorkoutScreenState extends State<WorkoutScreen> {
+  bool totalTimeDisplay = true;
   Workout _workout;
 
   @override
   initState() {
     super.initState();
     var tabataSounds = BlocProvider.of<SettingsCubit>(context).settings.tabataSounds;
-    var silent = BlocProvider.of<SettingsCubit>(context).settings.silentMode;
-    if (silent) tabataSounds = TabataSounds();
-    _workout = Workout(widget.tabata, tabataSounds, widget.targetForce, this._onWorkoutChanged);
+    var mute = BlocProvider.of<SettingsCubit>(context).settings.silentMode;
+    _workout = Workout(widget.tabata, tabataSounds, widget.targetForce, this._onWorkoutChanged, mute);
     _start();
   }
 
@@ -177,6 +177,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     if (_workout.step == WorkoutState.finished) {
       return Container();
     } else {
+      String timeDisplayText = 'Total Time';
+      String timeDisplay = formatTime(_workout.totalTime);
+      if (!totalTimeDisplay) {
+        timeDisplayText = "Time Left";
+        timeDisplay = formatTime(_workout.getTimeRemaning());
+      }
       tabataScreen = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -206,7 +212,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
             TableRow(children: [
               TableCell(child: Text('Set', style: TextStyle(fontSize: 30.0))),
               TableCell(child: Text('Rep', style: TextStyle(fontSize: 30.0))),
-              TableCell(child: Text('Total Time', textAlign: TextAlign.end, style: TextStyle(fontSize: 30.0)))
+              TableCell(child: Text(timeDisplayText, textAlign: TextAlign.end, style: TextStyle(fontSize: 30.0)))
             ]),
             TableRow(children: [
               TableCell(
@@ -216,11 +222,18 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                 child: Text('${_workout.rep}', style: TextStyle(fontSize: 60.0)),
               ),
               TableCell(
-                  child: Text(
-                formatTime(_workout.totalTime),
-                style: TextStyle(fontSize: 60.0),
-                textAlign: TextAlign.right,
-              ))
+                  child: TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero, primary: Colors.black),
+                      onPressed: () {
+                        setState(() {
+                          totalTimeDisplay = !totalTimeDisplay;
+                        });
+                      },
+                      child: Text(
+                        timeDisplay,
+                        style: TextStyle(fontSize: 60.0),
+                        textAlign: TextAlign.right,
+                      )))
             ]),
           ]),
           Divider(height: 1, color: lightTextColor),
@@ -242,6 +255,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     if (_workout.step == WorkoutState.finished) {
       return Container();
     }
+    double iconSize = 50;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -251,16 +265,16 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
             _workout.previous();
             _onWorkoutChanged();
           },
-          iconSize: 64.0,
+          iconSize: iconSize,
         ),
         IconButton(
           icon: Icon(_workout.isActive ? Icons.pause : Icons.play_arrow),
           onPressed: _workout.isActive ? _pause : _start,
-          iconSize: 64.0,
+          iconSize: iconSize,
         ),
         IconButton(
             icon: Icon(Icons.stop),
-            iconSize: 64.0,
+            iconSize: iconSize,
             onPressed: () {
               _workout.finished();
             }),
@@ -270,7 +284,15 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
             _workout.next();
             _onWorkoutChanged();
           },
-          iconSize: 64.0,
+          iconSize: iconSize,
+        ),
+        IconButton(
+          icon: Icon(_workout.isMuted() ? Icons.music_off : Icons.music_note),
+          onPressed: () {
+            this._workout.mute(!this._workout.isMuted());
+            _onWorkoutChanged();
+          },
+          iconSize: iconSize,
         ),
       ],
     );

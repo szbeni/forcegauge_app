@@ -83,6 +83,7 @@ class DeviceGraphLists extends StatelessWidget {
       List<Widget> deviceGraphViewList = [];
       for (var i = 0; i < state.devices.length; i++) {
         var deviceGraphView = BlocProvider<DeviceCubit>(
+          key: UniqueKey(),
           create: (_) => DeviceCubit(state.devices[i]),
           child: new DeviceGraphView(),
         );

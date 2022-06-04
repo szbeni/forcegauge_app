@@ -38,7 +38,7 @@ class HistoryList extends StatelessWidget {
     return BlocBuilder<ReportmanagerCubit, ReportmanagerState>(
       builder: (context, state) {
         if (state is ReportmanagerInitial || state.reports.length == 0) {
-          return Container(child: Text("List is empty, do some workout you lazy!"));
+          return Container(child: Text("List is empty, do some workout!"));
         } else {
           return ListView.builder(
               itemCount: state.reports.length,

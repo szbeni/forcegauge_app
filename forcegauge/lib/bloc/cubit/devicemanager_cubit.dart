@@ -18,11 +18,21 @@ class DevicemanagerCubit extends Cubit<DevicemanagerState> {
   }
 
   void addDevice(String name, String url) {
-    if (state.getDeviceByName(name) == null) {
-      var newDevice = new Device(name, url);
-      state.devices.add(newDevice);
-      emit(DevicemanagerUpdated(state.devices));
+    //Check if samne url name already exists
+    Device dev = state.getDeviceByName(name);
+    if (dev != null) {
+      if (dev.getUrl() == url) return;
     }
+
+    String newName = name;
+    int cntr = 0;
+    while (state.getDeviceByName(newName) != null) {
+      newName = name + cntr.toString();
+      cntr++;
+    }
+    var newDevice = new Device(newName, url);
+    state.devices.add(newDevice);
+    emit(DevicemanagerUpdated(state.devices));
   }
 
   void removeDevice(String name) {

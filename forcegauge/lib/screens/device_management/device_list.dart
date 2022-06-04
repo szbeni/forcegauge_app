@@ -18,6 +18,7 @@ class DeviceList extends StatelessWidget {
           return const Text('Add a new device');
         } else {
           return ListView.builder(
+              key: UniqueKey(),
               itemCount: state.devices.length,
               itemBuilder: (context, index) {
                 return BlocProvider<DeviceCubit>(
@@ -38,12 +39,12 @@ class DeviceListTile extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return new AlertDialog(title: new Text('Send tabatas to device: "${state.device.name}".'), actions: <Widget>[
-            new FlatButton(
+            new TextButton(
                 child: new Text('Cancel'),
                 // The alert is actually part of the navigation stack, so to close it, we
                 // need to pop it.
                 onPressed: () => Navigator.of(context).pop()),
-            new FlatButton(
+            new TextButton(
                 child: new Text('Send tabatas'),
                 onPressed: () {
                   // BlocProvider.of<DevicemanagerCubit>(context).removeDevice(state.device.name);
@@ -61,12 +62,12 @@ class DeviceListTile extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return new AlertDialog(title: new Text('Remove Device: "${state.device.name}".'), actions: <Widget>[
-            new FlatButton(
+            new TextButton(
                 child: new Text('Cancel'),
                 // The alert is actually part of the navigation stack, so to close it, we
                 // need to pop it.
                 onPressed: () => Navigator.of(context).pop()),
-            new FlatButton(
+            new TextButton(
                 child: new Text('Remove'),
                 onPressed: () {
                   BlocProvider.of<DevicemanagerCubit>(context).removeDevice(state.device.name);

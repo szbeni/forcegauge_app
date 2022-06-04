@@ -47,6 +47,7 @@ class Workout {
   double _lastForceValue = 0;
 
   bool _recordReportStarted = false;
+  bool _mute = false;
 
   /// Current set
   int _set = 0;
@@ -57,7 +58,7 @@ class Workout {
   //Wait a bit after user action
   Duration _waitAfterUserAction = Duration(seconds: 0);
 
-  Workout(this._config, this._sounds, this._targetForce, this._onStateChange) {
+  Workout(this._config, this._sounds, this._targetForce, this._onStateChange, this._mute) {
     this._workoutReport = new WorkoutReport(_config.name, DateTime.now(), _targetForce);
   }
 
@@ -73,6 +74,43 @@ class Workout {
       _workoutReport.addValue(_set, _rep, force);
       if (playSound) _playSound(_sounds.targetReached);
     }
+  }
+
+  void mute(bool mute) {
+    this._mute = mute;
+  }
+
+  bool isMuted() {
+    return this._mute;
+  }
+
+  Duration getTimeRemaning() {
+    int sets, reps, time = 0;
+    if (_step == WorkoutState.starting) {
+      time = _config.getTotalTime().inSeconds - _config.startDelay.inSeconds + _timeLeft.inSeconds;
+    } else if (_step == WorkoutState.exercising) {
+      sets = _config.sets - (_set - 1);
+      time = (_config.exerciseTime.inSeconds * sets * _config.reps) +
+          (_config.restTime.inSeconds * sets * (_config.reps - 1)) +
+          (_config.breakTime.inSeconds * (sets - 1));
+      time -= (_config.restTime.inSeconds + _config.exerciseTime.inSeconds) * (_rep - 1);
+      time -= (_config.exerciseTime.inSeconds - _timeLeft.inSeconds);
+    } else if (_step == WorkoutState.resting) {
+      sets = _config.sets - (_set - 1);
+      time = (_config.exerciseTime.inSeconds * sets * _config.reps) +
+          (_config.restTime.inSeconds * sets * (_config.reps - 1)) +
+          (_config.breakTime.inSeconds * (sets - 1));
+      time -= (_config.restTime.inSeconds + _config.exerciseTime.inSeconds) * (_rep - 1);
+      time -= _config.exerciseTime.inSeconds;
+      time -= (_config.restTime.inSeconds - _timeLeft.inSeconds);
+    } else if (_step == WorkoutState.breaking) {
+      sets = _config.sets - _set;
+      time = (_config.exerciseTime.inSeconds * sets * _config.reps) +
+          (_config.restTime.inSeconds * sets * (_config.reps - 1)) +
+          (_config.breakTime.inSeconds * (sets - 1));
+      time += _timeLeft.inSeconds;
+    }
+    return Duration(seconds: time);
   }
 
   /// Starts or resumes the workout
@@ -215,7 +253,7 @@ class Workout {
 
   Future _playSound(String sound) {
     //silent mode
-    if (sound == null || sound.length == 0) {
+    if (this._mute || sound == null || sound.length == 0) {
       return Future.value();
     }
     //audioCache.duckAudio = true;
