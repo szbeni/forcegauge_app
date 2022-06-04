@@ -46,6 +46,13 @@ jobs:
           name: appbundle
           path: forcegauge/build/app/outputs/bundle/release/app-release.aab
 
+      - name: Upload Apk
+        uses: actions/upload-artifact@v2
+        with:
+          name: apk
+          path: forcegauge/build/app/outputs/flutter-apk/*.apk
+
+
 
 #https://medium.com/@iqan/continuously-releasing-flutter-app-to-play-store-using-github-actions-eca2f5f6e996
       #    flutter pub get
