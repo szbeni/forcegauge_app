@@ -134,9 +134,21 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     var lightTextColor = theme.textTheme.bodyText2.color.withOpacity(0.8);
 
     var graphWidget = BlocBuilder<DevicemanagerCubit, DevicemanagerState>(builder: (context, state) {
+      //TODO: fix this if device is lost
+      int connectedDeviceNum = -1;
+      //Select the first connected device to use as force value
       if (!(state is DevicemanagerInitial) && state.devices.length > 0) {
+        for (int i = 0; i < state.devices.length; i++) {
+          if (state.devices[i].isConnected()) {
+            connectedDeviceNum = i;
+            break;
+          }
+        }
+      }
+
+      if (connectedDeviceNum != -1) {
         return BlocProvider<DeviceCubit>(
-          create: (_) => DeviceCubit(state.devices[0]),
+          create: (_) => DeviceCubit(state.devices[connectedDeviceNum]),
           child: BlocBuilder<DeviceCubit, DeviceState>(builder: (context, state) {
             if (_workout.step == WorkoutState.exercising) {
               return Container(width: 200, child: EvenMoreRealtime(true, widget.targetForce));
@@ -160,9 +172,21 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
     var forceTextStyle = TextStyle(fontSize: 80.0);
     var forceTextBox = BlocBuilder<DevicemanagerCubit, DevicemanagerState>(builder: (context, state) {
+      //TODO: fix this if device is lost, remove code duplication
+      int connectedDeviceNum = -1;
+      //Select the first connected device to use as force value
       if (!(state is DevicemanagerInitial) && state.devices.length > 0) {
-        return BlocProvider<DeviceCubit>(
-          create: (_) => DeviceCubit(state.devices[0]),
+        for (int i = 0; i < state.devices.length; i++) {
+          if (state.devices[i].isConnected()) {
+            connectedDeviceNum = i;
+            break;
+          }
+        }
+      }
+
+      if (connectedDeviceNum != -1) {
+        return new BlocProvider<DeviceCubit>(
+          create: (_) => DeviceCubit(state.devices[connectedDeviceNum]),
           child: BlocBuilder<DeviceCubit, DeviceState>(builder: (context, state) {
             _workout.newForceValue(state.device.lastValue.abs());
             return Text(state.device.lastValue.toStringAsFixed(1), style: forceTextStyle);
