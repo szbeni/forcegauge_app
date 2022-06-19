@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forcegauge/bloc/cubit/device_cubit.dart';
@@ -6,8 +9,8 @@ import 'package:forcegauge/screens/history_tab/historylist_screen.dart';
 import 'package:forcegauge/screens/settings_screen.dart';
 import 'package:forcegauge/screens/navigation_drawer.dart';
 import 'package:forcegauge/screens/tabata_tab/tabatalist_screen.dart';
-
 import 'min_max_tab/device_graphview.dart';
+import 'package:udp/udp.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -22,6 +25,22 @@ class _MainScreenState extends State<MainScreen> {
     TabataListScreen(true),
     HistoryListScreen(),
   ];
+
+  void startUDPServer() async {
+    var receiver = await UDP.bind(Endpoint.any(port: Port(65123)));
+    receiver.asStream().listen((datagram) {
+      var str = String.fromCharCodes(datagram.data);
+      if (str == "forcegauge") {
+        BlocProvider.of<DevicemanagerCubit>(context).addDevice("forcegauge", datagram.address.address);
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    startUDPServer();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

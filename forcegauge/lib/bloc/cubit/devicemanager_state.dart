@@ -11,6 +11,13 @@ abstract class DevicemanagerState {
     return null;
   }
 
+  Device getDeviceByURL(String url) {
+    for (var d in this.devices) {
+      if (d.getUrl() == url) return d;
+    }
+    return null;
+  }
+
   @override
   String toString() {
     String retval = "";

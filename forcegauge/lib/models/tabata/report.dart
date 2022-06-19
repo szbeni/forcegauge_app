@@ -51,6 +51,7 @@ class WorkoutReport {
     double targetForce = json["targetForce"] as double;
     var workoutReport = WorkoutReport(name, date, targetForce);
 
+    print(json);
     var reportValuesListJson = jsonDecode(json["reportValuesList"]) as List;
     for (var reportValuesJson in reportValuesListJson) {
       var reportValues = ReportValues.fromJson(reportValuesJson);

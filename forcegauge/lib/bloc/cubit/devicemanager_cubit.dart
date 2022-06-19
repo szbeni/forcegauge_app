@@ -18,10 +18,24 @@ class DevicemanagerCubit extends Cubit<DevicemanagerState> {
   }
 
   void addDevice(String name, String url) {
+    if (!url.startsWith("ws://")) {
+      url = "ws://" + url;
+    }
+
+    if (!url.endsWith(":81")) {
+      url += ":81";
+    }
+
     //Check if samne url name already exists
     Device dev = state.getDeviceByName(name);
     if (dev != null) {
       if (dev.getUrl() == url) return;
+    }
+
+    //Already have a device with this url
+    dev = state.getDeviceByURL(url);
+    if (dev != null) {
+      return;
     }
 
     String newName = name;
