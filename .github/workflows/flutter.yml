@@ -30,7 +30,6 @@ jobs:
       - name: Get Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '2.10.x'
           channel: 'stable'
 
       - name: Build App Bundle
