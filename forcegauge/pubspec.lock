@@ -35,7 +35,7 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.9.0"
+    version: "2.8.2"
   bloc:
     dependency: transitive
     description:
@@ -56,7 +56,7 @@ packages:
       name: characters
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.2.1"
+    version: "1.2.0"
   charcode:
     dependency: transitive
     description:
@@ -246,21 +246,23 @@ packages:
       name: material_color_utilities
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.5"
+    version: "0.1.4"
   meta:
     dependency: transitive
     description:
       name: meta
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.8.0"
+    version: "1.7.0"
   mp_chart:
     dependency: "direct main"
     description:
-      path: "../mp_chart"
-      relative: true
-    source: path
-    version: "0.3.1"
+      path: mp_chart
+      ref: master
+      resolved-ref: "51dfc9ccc1834c05ac8f20a6afe132cfe7a36f09"
+      url: "https://github.com/iBog/MPFlutterChart.git"
+    source: git
+    version: "0.3.3"
   nested:
     dependency: transitive
     description:
@@ -327,31 +329,33 @@ packages:
   optimized_gesture_detector:
     dependency: transitive
     description:
-      name: optimized_gesture_detector
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.6"
+      path: "."
+      ref: HEAD
+      resolved-ref: a34523b1dd86768c3f48a0de8e62b093bc6c32a2
+      url: "https://github.com/absar/OptimizedGestureDetector.git"
+    source: git
+    version: "0.1.1"
   path:
     dependency: transitive
     description:
       name: path
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.8.2"
+    version: "1.8.1"
   path_drawing:
     dependency: transitive
     description:
       name: path_drawing
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.4.1+1"
+    version: "1.0.0"
   path_parsing:
     dependency: transitive
     description:
       name: path_parsing
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.4"
+    version: "1.0.0"
   path_provider:
     dependency: transitive
     description:
@@ -449,7 +453,7 @@ packages:
       name: screenshot
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.3.0"
+    version: "1.2.3"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -517,7 +521,7 @@ packages:
       name: source_span
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.0"
+    version: "1.8.2"
   stack_trace:
     dependency: transitive
     description:
@@ -538,7 +542,7 @@ packages:
       name: string_scanner
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.1.1"
+    version: "1.1.0"
   term_glyph:
     dependency: transitive
     description:

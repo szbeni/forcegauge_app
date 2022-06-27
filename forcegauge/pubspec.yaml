@@ -32,8 +32,17 @@ dependencies:
   web_socket_channel: ^2.2.0
   universal_html: ^2.0.8
   shared_preferences: ^2.0.15
+  
+  #mp_chart: 
+  #  path: ../mp_chart
+
+  # Use this instead, which is an actively maintained version of mp_chart
   mp_chart: 
-    path: ../mp_chart
+    git:
+      url: https://github.com/iBog/MPFlutterChart.git
+      ref: master
+      path: ./mp_chart
+
   numberpicker: ^2.1.1
   flutter_bloc: ^8.0.1
   equatable: ^2.0.3
