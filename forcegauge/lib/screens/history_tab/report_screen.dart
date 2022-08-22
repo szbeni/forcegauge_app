@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forcegauge/models/tabata/report.dart';
+import 'package:forcegauge/screens/history_tab/test.dart';
 import 'package:forcegauge/screens/tabata_tab/report_graph.dart';
+import './report_graph2.dart';
 
 class ReportScreen extends StatefulWidget {
   final WorkoutReport workoutReport;
@@ -30,6 +32,10 @@ class _ReportScreenState extends State<ReportScreen> {
         Text(report.getMin().toStringAsFixed(1)),
         Text(report.getMax().toStringAsFixed(1)),
         Text(report.getAverage().toStringAsFixed(1)),
+        // Container(
+        //   child: ReportGraph(report),
+        // )
+
         IconButton(
             icon: Icon(Icons.show_chart),
             onPressed: () {
@@ -38,6 +44,8 @@ class _ReportScreenState extends State<ReportScreen> {
                 MaterialPageRoute(
                   //builder: (context) => Container(),
                   builder: (context) => ReportGraph(report),
+                  //builder: (context) => ReportGraph2(widget.workoutReport.getAllReports()),
+                  //builder: (context) => LineChartColorful(),
                 ),
               );
             })
