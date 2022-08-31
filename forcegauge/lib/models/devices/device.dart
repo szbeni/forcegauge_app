@@ -2,8 +2,13 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_cache_manager/file.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:forcegauge/models/socket_manager.dart';
 import 'package:forcegauge/models/tabata/tabata.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
 
 import 'device_data.dart';
 
@@ -13,6 +18,7 @@ enum DeviceNotificationType {
 }
 
 class Device extends Equatable {
+  static const String firmwareURL = "https://github.com/szbeni/forcegauge/releases/latest/download/forcegauge-esp32.ino.bin";
   List<DeviceData> _historicalData = [];
   int _historicalDataMaxLength = 500;
   final String name;
@@ -84,6 +90,44 @@ class Device extends Equatable {
     for (var t in tabatas) {
       var tabatJson = jsonEncode(t.toJson());
       _socket.send("add_tabata:$tabatJson");
+    }
+  }
+
+  Future<String> getTabatas() async {
+    try {
+      var client = new http.Client();
+      var url = this._url;
+      url = url.replaceFirst("ws://", "http://").replaceFirst(":81", "/tabatas.json");
+
+      final response = await client.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else
+        return "{}";
+    } catch (e) {
+      print(e);
+      return "{}";
+    }
+  }
+
+  Future<bool> updateFirmware() async {
+    try {
+      var file = await DefaultCacheManager().getSingleFile(firmwareURL);
+      var url = this._url;
+      url = url.replaceFirst("ws://", "http://").replaceFirst(":81", "/update");
+
+      var request = http.MultipartRequest('POST', Uri.parse(url));
+      request.files
+          .add(http.MultipartFile('update', file.readAsBytes().asStream(), file.lengthSync(), filename: "update.bin"));
+      var response = await request.send();
+      if (response.statusCode == 200)
+        return true;
+      else
+        return false;
+    } catch (error) {
+      print(error);
+      return false;
     }
   }
 

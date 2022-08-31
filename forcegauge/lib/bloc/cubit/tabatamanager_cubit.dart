@@ -16,11 +16,20 @@ class TabatamanagerCubit extends Cubit<TabatamanagerState> {
     emit(TabatamanagerLoaded(TabataList));
   }
 
-  bool addTabata(String name) {
+  bool addDefaultTabata(String name) {
     if (name != null && name.length > 0 && state.getTabataByName(name) == null) {
       var newTabata = defaultTabata;
       newTabata.name = name;
       state.tabatas.add(newTabata);
+      emit(TabatamanagerUpdated(state.tabatas));
+      return true;
+    }
+    return false;
+  }
+
+  bool addTabata(Tabata t) {
+    if (t.name != null && t.name.length > 0 && state.getTabataByName(t.name) == null) {
+      state.tabatas.add(t);
       emit(TabatamanagerUpdated(state.tabatas));
       return true;
     }

@@ -44,7 +44,7 @@ class TabataListScreenState extends State<TabataListScreen> {
               new TextButton(
                   child: new Text('Add'),
                   onPressed: () {
-                    bool success = BlocProvider.of<TabatamanagerCubit>(context).addTabata(newTabataName);
+                    bool success = BlocProvider.of<TabatamanagerCubit>(context).addDefaultTabata(newTabataName);
                     if (success) {
                       Navigator.of(context).pop();
                     }

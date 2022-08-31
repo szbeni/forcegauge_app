@@ -6,6 +6,8 @@ import 'package:forcegauge/bloc/cubit/settings_cubit.dart';
 import 'package:forcegauge/bloc/cubit/tabatamanager_cubit.dart';
 import 'package:forcegauge/models/devices/device.dart';
 
+import 'device_settings.dart';
+
 class DeviceList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -95,10 +97,23 @@ class DeviceListTile extends StatelessWidget {
             ),
           ),
           subtitle: new Text("Address: " + state.device.getUrl().toString()),
-          onTap: () => _removedDeviceDialog(context, state),
-          onLongPress: () {
-            _sendTabatasDialog(context, state);
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DeviceSettingsScreen(state.device),
+              ),
+            );
           },
+
+          // onTap: ()
+          // {
+
+          // }
+          // onTap: () => _removedDeviceDialog(context, state),
+          // onLongPress: () {
+          //   _sendTabatasDialog(context, state);
+          // },
         );
       },
     );
