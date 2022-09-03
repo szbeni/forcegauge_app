@@ -11,6 +11,7 @@ import 'package:forcegauge/models/tabata/workout.dart';
 import 'package:forcegauge/screens/history_tab/report_screen.dart';
 import 'package:forcegauge/screens/min_max_tab/realtime_chart.dart';
 import 'package:forcegauge/screens/tabata_tab/report_graph.dart';
+import 'package:wakelock/wakelock.dart';
 
 class WorkoutScreen extends StatefulWidget {
   final double targetForce;
@@ -38,9 +39,10 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   @override
   dispose() {
     _workout.dispose();
-    try {
-      //Screen.keepOn(false);
-    } catch (e) {}
+    //try {
+    //Screen.keepOn(false);
+    Wakelock.disable();
+    //} catch (e) {}
 
     super.dispose();
   }
@@ -56,9 +58,10 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
         ),
       );
 
-      try {
-        //Screen.keepOn(false);
-      } catch (e) {}
+      //try {
+      Wakelock.enable();
+      //Screen.keepOn(false);
+      //} catch (e) {}
     }
     this.setState(() {});
   }
@@ -81,16 +84,18 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
   _pause() {
     _workout.pause();
-    try {
-      //Screen.keepOn(false);
-    } catch (e) {}
+    //try {
+    //Wakelock.disable();
+    //Screen.keepOn(false);
+    //} catch (e) {}
   }
 
   _start() {
     _workout.start();
-    try {
-      //Screen.keepOn(true);
-    } catch (e) {}
+    //try {
+    Wakelock.enable();
+    //Screen.keepOn(true);
+    //} catch (e) {}
   }
 
   Widget makeReportView(Map<String, ReportValues> reports) {
