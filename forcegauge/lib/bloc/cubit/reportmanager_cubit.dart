@@ -35,4 +35,9 @@ class ReportmanagerCubit extends Cubit<ReportmanagerState> {
       emit(ReportmanagerUpdated(state.reports));
     }
   }
+
+  void clearAllReports() {
+    state.reports.clear();
+    emit(ReportmanagerUpdated(state.reports));
+  }
 }

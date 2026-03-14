@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+//import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:forcegauge/bloc/cubit/devicemanager_cubit.dart';
 import '../../bloc/cubit/tabatamanager_cubit.dart';
 import '../../models/devices/device.dart';
@@ -63,6 +63,12 @@ class _DeviceSettingsScreenState extends State<DeviceSettingsScreen> {
         Icons.cancel,
         size: 50,
         color: Colors.red,
+      );
+    } else {
+      return Icon(
+        Icons.done,
+        size: 50,
+        color: Colors.green,
       );
     }
   }

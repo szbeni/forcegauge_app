@@ -1,37 +1,38 @@
 name: Build
-on: [push]
 
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 jobs:
   build:
-    name: Forcegague app
+    name: Forcegauge app
     runs-on: ubuntu-latest
     environment: googleplay
+
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Get Android Keystore
-        id: write_file
-        uses: timheuer/base64-to-file@v1.1
-        with:
-          fileName: 'key.jks'
-          fileDir: './forcegauge/'
-          encodedString: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - name: Decode Android Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > forcegauge/key.jks
 
       - name: Create key.properties
         run: |
           cd forcegauge
-          echo "storeFile=../../key.jks" > android/key.properties
+          echo "storeFile=../key.jks" > android/key.properties
           echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
 
-      - name: Get Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
+          cache: true
 
       - name: Build App Bundle
         run: |
@@ -41,55 +42,13 @@ jobs:
           flutter build appbundle
 
       - name: Upload App Bundle
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: appbundle
           path: forcegauge/build/app/outputs/bundle/release/app-release.aab
 
-      - name: Upload Apk
-        uses: actions/upload-artifact@v2
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: apk
           path: forcegauge/build/app/outputs/flutter-apk/*.apk
-
-
-
-#https://medium.com/@iqan/continuously-releasing-flutter-app-to-play-store-using-github-actions-eca2f5f6e996
-      #    flutter pub get
-      #    flutter build apk
-      #    cp ./build/app/outputs/flutter-apk/app-release.apk ./forcegauge.apk
-
-      #   flutter pub get
-      #   flutter test
-      #   flutter build apk --release --split-per-abi
-      #   flutter build appbundle      
-
-
-
-      # - name: Create a Release in GitHub
-      #   uses: actions/checkout@v2
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: "./build/app/outputs/flutter-apk/app-release.apk"
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-
-
-
-    #  release:
-    # name: Release app to internal track
-    # needs: [ build ]
-    # runs-on: ubuntu-latest
-    # steps:
-    # - uses: actions/checkout@v1
-    # - name: Get appbundle from artifacts
-    #   uses: actions/download-artifact@v2
-    #   with:
-    #     name: appbundle
-    # - name: Release app to internal track
-    #   uses: r0adkll/upload-google-play@v1
-    #   with:
-    #     serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_ACCOUNT_KEY }}
-    #     packageName: com.fluttercicddemo
-    #     releaseFile: app-release.aab
-    #     track: internal
-    #     whatsNewDirectory: distribution/whatsnew

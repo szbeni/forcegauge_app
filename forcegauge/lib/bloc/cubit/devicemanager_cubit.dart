@@ -27,7 +27,7 @@ class DevicemanagerCubit extends Cubit<DevicemanagerState> {
     }
 
     //Check if samne url name already exists
-    Device dev = state.getDeviceByName(name);
+    Device? dev = state.getDeviceByName(name);
     if (dev != null) {
       if (dev.getUrl() == url) return;
     }
@@ -50,7 +50,7 @@ class DevicemanagerCubit extends Cubit<DevicemanagerState> {
   }
 
   void removeDevice(String name) {
-    Device dev = state.getDeviceByName(name);
+    Device? dev = state.getDeviceByName(name);
     if (dev != null) {
       dev.close();
       state.devices.remove(dev);
@@ -82,5 +82,4 @@ class DevicemanagerCubit extends Cubit<DevicemanagerState> {
   //       jsonEncode(_devices.map((i) => i.toJson()).toList()).toString();
   //   _prefs.setString('devices', json);
   // }
-
 }

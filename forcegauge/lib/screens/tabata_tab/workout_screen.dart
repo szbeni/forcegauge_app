@@ -11,13 +11,13 @@ import 'package:forcegauge/models/tabata/workout.dart';
 import 'package:forcegauge/screens/history_tab/report_screen.dart';
 import 'package:forcegauge/screens/min_max_tab/realtime_chart.dart';
 import 'package:forcegauge/screens/tabata_tab/report_graph.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class WorkoutScreen extends StatefulWidget {
   final double targetForce;
   final Tabata tabata;
 
-  WorkoutScreen({this.tabata, this.targetForce = 0});
+  WorkoutScreen({required this.tabata, this.targetForce = 0});
 
   @override
   State<StatefulWidget> createState() => _WorkoutScreenState();
@@ -25,11 +25,12 @@ class WorkoutScreen extends StatefulWidget {
 
 class _WorkoutScreenState extends State<WorkoutScreen> {
   bool totalTimeDisplay = true;
-  Workout _workout;
+  late Workout _workout;
 
   @override
   initState() {
     super.initState();
+    WakelockPlus.enable();
     var tabataSounds = BlocProvider.of<SettingsCubit>(context).settings.tabataSounds;
     var mute = BlocProvider.of<SettingsCubit>(context).settings.silentMode;
     _workout = Workout(widget.tabata, tabataSounds, widget.targetForce, this._onWorkoutChanged, mute);
@@ -39,29 +40,21 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   @override
   dispose() {
     _workout.dispose();
-    //try {
-    //Screen.keepOn(false);
-    Wakelock.disable();
-    //} catch (e) {}
-
+    WakelockPlus.disable();
     super.dispose();
   }
 
   _onWorkoutChanged() {
     if (_workout.step == WorkoutState.finished) {
+      final report = _workout.workoutReport;
+      BlocProvider.of<ReportmanagerCubit>(context).addWorkoutReport(report);
       Navigator.of(context).pop();
-      BlocProvider.of<ReportmanagerCubit>(context).addWorkoutReport(_workout.workoutReport);
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ReportScreen(_workout.workoutReport),
+          builder: (context) => ReportScreen(report),
         ),
       );
-
-      //try {
-      Wakelock.enable();
-      //Screen.keepOn(false);
-      //} catch (e) {}
     }
     this.setState(() {});
   }
@@ -93,13 +86,14 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   _start() {
     _workout.start();
     //try {
-    Wakelock.enable();
+    //TODO: Wakelock.enable();
     //Screen.keepOn(true);
     //} catch (e) {}
   }
 
   Widget makeReportView(Map<String, ReportValues> reports) {
-    var table = Table(border: TableBorder.all(), // Allows to add a border decoration around your table
+    var table = Table(
+        border: TableBorder.all(), // Allows to add a border decoration around your table
         children: [
           TableRow(children: [
             Text('Workout', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -113,9 +107,9 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     for (var report in reports.keys) {
       var reportWidget = TableRow(children: [
         Text(report),
-        Text(reports[report].getMin().toStringAsFixed(1)),
-        Text(reports[report].getMax().toStringAsFixed(1)),
-        Text(reports[report].getAverage().toStringAsFixed(1)),
+        Text(reports[report]?.getMin().toStringAsFixed(1)),
+        Text(reports[report]?.getMax().toStringAsFixed(1)),
+        Text(reports[report]?.getAverage().toStringAsFixed(1)),
         IconButton(
             icon: Icon(Icons.show_chart),
             onPressed: () {
@@ -123,7 +117,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                 context,
                 MaterialPageRoute(
                   //builder: (context) => Container(),
-                  builder: (context) => ReportGraph(reports[report]),
+                  builder: (context) => ReportGraph(reports[report]!),
                 ),
               );
             })
@@ -136,7 +130,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    var lightTextColor = theme.textTheme.bodyText2.color.withOpacity(0.8);
+    var lightTextColor = theme.textTheme.bodyMedium?.color?.withOpacity(0.8);
+    var primaryTextColor = theme.textTheme.bodyLarge?.color ?? (theme.brightness == Brightness.dark ? Colors.white : Colors.black);
 
     var graphWidget = BlocBuilder<DevicemanagerCubit, DevicemanagerState>(builder: (context, state) {
       //TODO: fix this if device is lost
@@ -157,16 +152,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           child: BlocBuilder<DeviceCubit, DeviceState>(builder: (context, state) {
             if (_workout.step == WorkoutState.exercising) {
               return Container(width: 200, child: EvenMoreRealtime(true, widget.targetForce));
-              //return Container();
             } else {
               var lastReport = _workout.workoutReport.getSetRepReport(_workout.set, _workout.rep);
-              if (lastReport != null) {
+              if (lastReport != null && lastReport.getValues().isNotEmpty) {
                 return Container(width: 200, child: ReportGraph(lastReport));
-                //return Container();
-              } else {
-                return Container();
-                //return Text(state.device.lastValue.toStringAsFixed(1), style: TextStyle(fontSize: 40.0));
               }
+              return Container();
             }
           }),
         );
@@ -175,7 +166,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       }
     });
 
-    var forceTextStyle = TextStyle(fontSize: 80.0);
+    var forceTextStyle = TextStyle(fontSize: 80.0, color: primaryTextColor);
     var forceTextBox = BlocBuilder<DevicemanagerCubit, DevicemanagerState>(builder: (context, state) {
       //TODO: fix this if device is lost, remove code duplication
       int connectedDeviceNum = -1;
@@ -226,12 +217,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           Divider(height: 1, color: lightTextColor),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [Text(Workout.stepName(_workout.step), style: TextStyle(fontSize: 60.0))],
+            children: [Text(Workout.stepName(_workout.step), style: TextStyle(fontSize: 60.0, color: primaryTextColor))],
           ),
           Divider(height: 1, color: lightTextColor),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [forceTextBox]),
           Divider(height: 1, color: lightTextColor),
-          Container(width: MediaQuery.of(context).size.width, child: FittedBox(child: Text(formatTime(_workout.timeLeft)))),
+          Container(width: MediaQuery.of(context).size.width, child: FittedBox(child: Text(formatTime(_workout.timeLeft), style: TextStyle(color: primaryTextColor)))),
           Divider(height: 1, color: lightTextColor),
           Table(columnWidths: {
             0: FlexColumnWidth(0.5),
@@ -239,20 +230,20 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
             2: FlexColumnWidth(1.0)
           }, children: [
             TableRow(children: [
-              TableCell(child: Text('Set', style: TextStyle(fontSize: 30.0))),
-              TableCell(child: Text('Rep', style: TextStyle(fontSize: 30.0))),
-              TableCell(child: Text(timeDisplayText, textAlign: TextAlign.end, style: TextStyle(fontSize: 30.0)))
+              TableCell(child: Text('Set', style: TextStyle(fontSize: 30.0, color: primaryTextColor))),
+              TableCell(child: Text('Rep', style: TextStyle(fontSize: 30.0, color: primaryTextColor))),
+              TableCell(child: Text(timeDisplayText, textAlign: TextAlign.end, style: TextStyle(fontSize: 30.0, color: primaryTextColor)))
             ]),
             TableRow(children: [
               TableCell(
-                child: Text('${_workout.set}', style: TextStyle(fontSize: 60.0)),
+                child: Text('${_workout.set}', style: TextStyle(fontSize: 60.0, color: primaryTextColor)),
               ),
               TableCell(
-                child: Text('${_workout.rep}', style: TextStyle(fontSize: 60.0)),
+                child: Text('${_workout.rep}', style: TextStyle(fontSize: 60.0, color: primaryTextColor)),
               ),
               TableCell(
                   child: TextButton(
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero, primary: Colors.black),
+                      style: TextButton.styleFrom(foregroundColor: primaryTextColor, padding: EdgeInsets.zero),
                       onPressed: () {
                         setState(() {
                           totalTimeDisplay = !totalTimeDisplay;
@@ -260,7 +251,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                       },
                       child: Text(
                         timeDisplay,
-                        style: TextStyle(fontSize: 60.0),
+                        style: TextStyle(fontSize: 60.0, color: primaryTextColor),
                         textAlign: TextAlign.right,
                       )))
             ]),

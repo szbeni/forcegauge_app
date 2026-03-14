@@ -4,14 +4,14 @@ abstract class DevicemanagerState {
   final List<Device> devices;
   DevicemanagerState(this.devices);
 
-  Device getDeviceByName(String name) {
+  Device? getDeviceByName(String name) {
     for (var d in this.devices) {
       if (d.name == name) return d;
     }
     return null;
   }
 
-  Device getDeviceByURL(String url) {
+  Device? getDeviceByURL(String url) {
     for (var d in this.devices) {
       if (d.getUrl() == url) return d;
     }

@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_cache_manager/file.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+//import 'package:flutter_cache_manager/file.dart';
+//import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:forcegauge/models/socket_manager.dart';
 import 'package:forcegauge/models/tabata/tabata.dart';
 import 'package:http/http.dart' as http;
@@ -22,7 +22,7 @@ class Device extends Equatable {
   List<DeviceData> _historicalData = [];
   int _historicalDataMaxLength = 500;
   final String name;
-  String _url;
+  late String _url;
   double offset = 0;
   double scaler = 0;
   double lastValue = 0;
@@ -113,7 +113,8 @@ class Device extends Equatable {
 
   Future<bool> updateFirmware() async {
     try {
-      var file = await DefaultCacheManager().getSingleFile(firmwareURL);
+      //var file = await DefaultCacheManager().getSingleFile(firmwareURL);
+      var file;
       var url = this._url;
       url = url.replaceFirst("ws://", "http://").replaceFirst(":81", "/update");
 

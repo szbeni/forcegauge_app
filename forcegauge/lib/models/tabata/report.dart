@@ -4,9 +4,9 @@ import 'dart:math';
 import 'package:flutter/rendering.dart';
 
 class WorkoutReport {
-  String name;
-  double targetForce;
-  DateTime date;
+  late String name;
+  late double targetForce;
+  late DateTime date;
 
   WorkoutReport(name, date, targetForce) {
     this.date = date;
@@ -32,7 +32,7 @@ class WorkoutReport {
     }
   }
 
-  ReportValues getSetRepReport(int set, int rep) {
+  ReportValues? getSetRepReport(int set, int rep) {
     for (int i = 0; i < _reportValuesList.length; i++) {
       if (set == _reportValuesList[i].set && rep == _reportValuesList[i].rep) {
         return _reportValuesList[i];

@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 
 class NumberPickerDialog extends StatefulWidget {
-  final num initialValue;
-  final num min;
-  final num max;
-  final num step;
+  final int initialValue;
+  final int min;
+  final int max;
+  final int step;
   final EdgeInsets titlePadding;
   final Widget title;
   final Widget confirmWidget;
   final Widget cancelWidget;
 
   NumberPickerDialog({
-    @required this.initialValue,
-    @required this.min,
-    @required this.max,
-    @required this.step,
-    this.title,
-    this.titlePadding,
-    Widget confirmWidget,
-    Widget cancelWidget,
+    required this.initialValue,
+    required this.min,
+    required this.max,
+    required this.step,
+    required this.title,
+    required this.titlePadding,
+    required Widget confirmWidget,
+    required Widget cancelWidget,
   })  : confirmWidget = confirmWidget ?? new Text('OK'),
         cancelWidget = cancelWidget ?? new Text('CANCEL');
 
@@ -28,11 +28,14 @@ class NumberPickerDialog extends StatefulWidget {
 }
 
 class _NumberPickerDialogState extends State<NumberPickerDialog> {
-  num value;
+  late int value;
 
-  _NumberPickerDialogState(num initialValue) {
+  _NumberPickerDialogState(int initialValue) {
     value = initialValue;
   }
+
+  static bool _isEmptyContainer(Widget w) =>
+      w is Container && (w as Container).child == null;
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +61,15 @@ class _NumberPickerDialogState extends State<NumberPickerDialog> {
       actions: [
         new TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: widget.cancelWidget,
+          child: _isEmptyContainer(widget.cancelWidget)
+              ? Text('CANCEL')
+              : widget.cancelWidget,
         ),
         new TextButton(
           onPressed: () => Navigator.of(context).pop(value),
-          child: widget.confirmWidget,
+          child: _isEmptyContainer(widget.confirmWidget)
+              ? Text('OK')
+              : widget.confirmWidget,
         ),
       ],
     );

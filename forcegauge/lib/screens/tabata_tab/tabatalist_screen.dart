@@ -77,6 +77,9 @@ class TabataListScreenState extends State<TabataListScreen> {
               acceleration: 0.1,
               step: 0.1,
               title: Text('Sets in the workout'),
+              titlePadding: EdgeInsets.all(0),
+              confirmWidget: Container(),
+              cancelWidget: Container(),
             );
           },
         ).then((force) {
@@ -107,7 +110,7 @@ class TabataList extends StatelessWidget {
   const TabataList(this.targetView);
   @override
   Widget build(BuildContext context) {
-    final itemNameStyle = Theme.of(context).textTheme.headline6;
+    final itemNameStyle = Theme.of(context).textTheme.titleLarge;
 
     return BlocBuilder<TabatamanagerCubit, TabatamanagerState>(
       builder: (context, state) {

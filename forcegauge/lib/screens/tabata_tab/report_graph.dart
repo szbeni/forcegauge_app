@@ -1,166 +1,133 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:forcegauge/models/tabata/report.dart';
-import 'package:mp_chart/mp/chart/line_chart.dart';
-import 'package:mp_chart/mp/controller/line_chart_controller.dart';
-import 'package:mp_chart/mp/core/data/line_data.dart';
-import 'package:mp_chart/mp/core/data_set/line_data_set.dart';
-import 'package:mp_chart/mp/core/description.dart';
-import 'package:mp_chart/mp/core/entry/entry.dart';
-import 'package:mp_chart/mp/core/enums/mode.dart';
-import 'package:mp_chart/mp/core/utils/color_utils.dart';
+import 'package:forcegauge/bloc/cubit/settings_cubit.dart';
 
-class ReportGraph extends StatefulWidget {
+class ReportGraph extends StatelessWidget {
   final ReportValues report;
-  const ReportGraph(this.report);
-  @override
-  _ReportGraphState createState() => _ReportGraphState();
-}
 
-class _ReportGraphState extends State<ReportGraph> {
-  LineChartController _controller;
-  var random = Random(1);
-
-  @override
-  void initState() {
-    _initController();
-    _initLineDataFromReport();
-    //_initLineData(_range);
-    super.initState();
-  }
-
-  @override
-  String getTitle() => "Line Chart Performance";
+  const ReportGraph(this.report, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(height: 200, child: LineChart(_controller));
-  }
-
-  @override
-  Widget getBody() {
-    // return Stack(
-    //   children: <Widget>[
-    //     Positioned(right: 0, left: 0, top: 0, bottom: 100, child: LineChart(_controller)),
-    //     Positioned(
-    //       left: 0,
-    //       right: 0,
-    //       bottom: 0,
-    //       child: Column(
-    //         mainAxisSize: MainAxisSize.max,
-    //         crossAxisAlignment: CrossAxisAlignment.start,
-    //         children: <Widget>[
-    //           Row(
-    //             mainAxisSize: MainAxisSize.max,
-    //             crossAxisAlignment: CrossAxisAlignment.start,
-    //             children: <Widget>[
-    //               Expanded(
-    //                 child: Center(
-    //                     child: Slider(
-    //                         value: _range,
-    //                         min: 0,
-    //                         max: 9000,
-    //                         onChanged: (value) {
-    //                           _range = value;
-    //                           _initLineData(_range);
-    //                         })),
-    //               ),
-    //               Container(
-    //                   constraints: BoxConstraints.expand(height: 50, width: 60),
-    //                   padding: EdgeInsets.only(right: 15.0),
-    //                   child: Center(
-    //                       child: Text(
-    //                     "$_count",
-    //                     textDirection: TextDirection.ltr,
-    //                     textAlign: TextAlign.center,
-    //                     style: TextStyle(color: ColorUtils.BLACK, fontSize: 12, fontWeight: FontWeight.bold),
-    //                   ))),
-    //             ],
-    //           ),
-    //         ],
-    //       ),
-    //     )
-    //   ],
-    // );
-  }
-
-  void _initController() {
-    var desc = Description()..enabled = false;
-    _controller = LineChartController(
-        axisLeftSettingFunction: (axisLeft, controller) {
-          axisLeft.drawGridLines = (false);
-        },
-        axisRightSettingFunction: (axisRight, controller) {
-          axisRight.enabled = (false);
-        },
-        legendSettingFunction: (legend, controller) {
-          legend.enabled = (false);
-        },
-        xAxisSettingFunction: (xAxis, controller) {
-          xAxis
-            ..drawGridLines = (true)
-            ..drawAxisLine = (false);
-        },
-        drawGridBackground: true,
-        backgroundColor: ColorUtils.WHITE,
-        dragXEnabled: false,
-        dragYEnabled: false,
-        scaleXEnabled: false,
-        scaleYEnabled: false,
-        pinchZoomEnabled: false,
-        description: desc);
-  }
-
-  void _initLineDataFromReport() {
-    List<Entry> values = List();
-
-    values.add(new Entry(x: 0, y: 0));
-    double counter = 1;
-    for (var value in widget.report.getValues()) {
-      values.add(new Entry(x: counter, y: value));
-      counter += 1;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final chartBg = isDark ? const Color(0xFF121212) : Colors.white;
+    final axisColor = isDark ? Colors.grey[400]! : const Color(0xFF424242);
+    final values = report.getValues();
+    if (values.isEmpty) {
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        child: Text(
+          'No data',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      );
     }
-    values.add(new Entry(x: counter, y: 0));
 
-    // create a dataset and give it a type
-    LineDataSet set1 = new LineDataSet(values, "DataSet 1");
+    final primaryColor = context.read<SettingsCubit>().settings.primarySwatch;
 
-    set1.setColor1(ColorUtils.BLUE);
-    set1.setLineWidth(2);
-    set1.setDrawValues(false);
-    set1.setDrawCircles(false);
-    set1.setMode(Mode.LINEAR);
-    set1.setDrawFilled(false);
+    final spots = <FlSpot>[];
+    for (var i = 0; i < values.length; i++) {
+      final y = (values[i] is double ? values[i] as double : (values[i] as num).toDouble());
+      if (y.isFinite) spots.add(FlSpot(i.toDouble(), y));
+    }
+    if (spots.length < 2) {
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        child: Text('Not enough data to chart', style: Theme.of(context).textTheme.bodyLarge),
+      );
+    }
 
-    // create a data object with the data sets
-    _controller.data = LineData.fromList(List()..add(set1));
-    setState(() {});
+    double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    if (maxY <= minY) maxY = minY + 1.0;
+    final padding = (maxY - minY) * 0.1;
+    final chartMinY = minY - padding;
+    final chartMaxY = maxY + padding;
+
+    final minX = spots.map((s) => s.x).reduce((a, b) => a < b ? a : b);
+    final maxX = spots.map((s) => s.x).reduce((a, b) => a > b ? a : b);
+    if (maxX <= minX) return Container(height: 200, alignment: Alignment.center, child: Text('Not enough data to chart', style: Theme.of(context).textTheme.bodyLarge));
+
+    final lineData = LineChartData(
+      minX: minX,
+      maxX: maxX,
+      minY: chartMinY,
+      maxY: chartMaxY,
+      backgroundColor: chartBg,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        getDrawingHorizontalLine: (value) => FlLine(
+          color: Colors.grey.withValues(alpha: 0.2),
+          strokeWidth: 1,
+        ),
+      ),
+      titlesData: FlTitlesData(
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 36,
+            getTitlesWidget: (value, meta) => Text(
+              value.toStringAsFixed(0),
+              style: TextStyle(color: axisColor, fontSize: 10),
+            ),
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 24,
+            getTitlesWidget: (value, meta) => Text(
+              value.toStringAsFixed(0),
+              style: TextStyle(color: axisColor, fontSize: 10),
+            ),
+          ),
+        ),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      ),
+      borderData: FlBorderData(show: false),
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: primaryColor,
+          barWidth: 2.5,
+          isStrokeCapRound: true,
+          dotData: const FlDotData(show: false),
+          belowBarData: BarAreaData(show: false),
+        ),
+      ],
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipItems: (touchedSpots) => touchedSpots
+              .map((s) => LineTooltipItem(
+                    s.y.toStringAsFixed(1),
+                    TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ))
+              .toList(),
+        ),
+      ),
+    );
+
+    return Container(
+      height: 200,
+      color: chartBg,
+      padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+      child: LineChart(
+        lineData,
+        duration: const Duration(milliseconds: 250),
+      ),
+    );
   }
-
-  // void _initLineData(double range) {
-  //   List<Entry> values = List();
-
-  //   _count = (range + 1000).toInt();
-
-  //   for (int i = 0; i < _count; i++) {
-  //     double val = (random.nextDouble() * (range + 1)) + 3;
-  //     values.add(new Entry(x: i * 0.001, y: val));
-  //   }
-
-  //   // create a dataset and give it a type
-  //   LineDataSet set1 = new LineDataSet(values, "DataSet 1");
-
-  //   set1.setColor1(ColorUtils.BLUE);
-  //   set1.setLineWidth(2);
-  //   set1.setDrawValues(false);
-  //   set1.setDrawCircles(false);
-  //   set1.setMode(Mode.LINEAR);
-  //   set1.setDrawFilled(false);
-
-  //   // create a data object with the data sets
-  //   _controller.data = LineData.fromList(List()..add(set1));
-
-  //   setState(() {});
-  // }
 }

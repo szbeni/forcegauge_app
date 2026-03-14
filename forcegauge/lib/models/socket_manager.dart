@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:forcegauge/models/websocket_html.dart'
-    if (dart.library.io) 'package:forcegauge/models/websocket_io.dart';
+import 'package:forcegauge/models/websocket_html.dart' if (dart.library.io) 'package:forcegauge/models/websocket_io.dart';
 
 // WebSocketsNotifications sockets = new WebSocketsNotifications();
 
@@ -12,11 +11,11 @@ class WebSocketsNotifications extends WebsocketGetter {
   bool _isConnected = false;
   //Flags if we have already trying to connect
   bool _isConnecting = false;
-  String _lastStatusMsg = "";
-  DateTime _lastMessageTime;
+  late String _lastStatusMsg = "";
+  late DateTime _lastMessageTime;
   int _timeout = 5000;
   int _connectionCheckPeriod = 5000;
-  Timer _timer;
+  Timer? _timer;
 
   WebSocketsNotifications() {
     _timer = Timer.periodic(
@@ -34,8 +33,7 @@ class WebSocketsNotifications extends WebsocketGetter {
   }
 
   ObserverList<Function> _listenersOnMessage = new ObserverList<Function>();
-  ObserverList<Function> _listenersOnStatusChanged =
-      new ObserverList<Function>();
+  ObserverList<Function> _listenersOnStatusChanged = new ObserverList<Function>();
 
   connect(url) async {
     this._url = url;
@@ -56,7 +54,7 @@ class WebSocketsNotifications extends WebsocketGetter {
 
   close() {
     if (_timer != null) {
-      _timer.cancel();
+      _timer?.cancel();
       _timer = null;
       reset();
     }

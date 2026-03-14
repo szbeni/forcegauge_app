@@ -16,11 +16,11 @@ class Settings {
     'Gong 2': 'gong2.mp3',
     'Doorbell': 'doorbell.mp3'
   };
-  bool nightMode;
-  bool silentMode;
-  Color primarySwatch;
-  double fontSize;
-  double targetForce;
+  late bool nightMode;
+  late bool silentMode;
+  late MaterialColor primarySwatch;
+  late double fontSize;
+  late double targetForce;
   TabataSounds tabataSounds = new TabataSounds();
 
   fromJson(Map<String, dynamic> json) {
@@ -28,7 +28,11 @@ class Settings {
     nightMode = json['nightMode'] ?? false;
     silentMode = json['silentMode'] ?? false;
     targetForce = json['targetForce'] ?? 30;
-    primarySwatch = Colors.primaries[json['primarySwatch'] ?? Colors.primaries.indexOf(Colors.blue)];
+    final index = json['primarySwatch'];
+    final i = (index is int && index >= 0 && index < Colors.primaries.length)
+        ? index
+        : Colors.primaries.indexOf(Colors.blue);
+    primarySwatch = Colors.primaries[i];
     tabataSounds.countdownPip = json['countdownPip'] ?? 'pip.mp3';
     tabataSounds.startRep = json['startRep'] ?? 'whistle.mp3';
     tabataSounds.startRest = json['startRest'] ?? 'metalding.mp3';

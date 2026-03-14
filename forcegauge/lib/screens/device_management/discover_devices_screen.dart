@@ -59,8 +59,8 @@ class _DiscoverDevicesScreenState extends State<DiscoverDevicesScreen> {
       return;
     }
     final info = NetworkInfo();
-    final String ip = await info.getWifiIP();
-    final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+    final String? ip = await info.getWifiIP();
+    final String subnet = ip!.substring(0, ip.lastIndexOf('.'));
     final int port = 80;
     print("Scan started");
     scanInProgress = true;
@@ -132,7 +132,11 @@ class _DiscoverDevicesScreenState extends State<DiscoverDevicesScreen> {
       ),
       backgroundColor: Color.fromARGB(255, 242, 244, 243),
       body: RefreshIndicator(
-        onRefresh: () {},
+        onRefresh: () {
+          return Future<void>(
+            () => 0,
+          );
+        },
         child: Flex(
           crossAxisAlignment: CrossAxisAlignment.start,
           direction: Axis.vertical,

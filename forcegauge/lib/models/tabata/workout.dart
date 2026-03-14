@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:forcegauge/models/tabata/report.dart';
 import 'package:forcegauge/models/tabata/tabata.dart';
 
@@ -28,17 +28,17 @@ class Workout {
   TabataSounds _sounds;
 
   //
-  WorkoutReport _workoutReport;
+  late WorkoutReport _workoutReport;
 
   /// Callback for when the workout's state has changed.
   Function _onStateChange;
 
   WorkoutState _step = WorkoutState.initial;
 
-  Timer _timer;
+  late Timer _timer;
 
   /// Time left in the current step
-  Duration _timeLeft;
+  late Duration _timeLeft;
 
   Duration _totalTime = Duration(seconds: 0);
 
@@ -251,20 +251,17 @@ class Workout {
     }
   }
 
-  Future _playSound(String sound) {
-    //silent mode
-    if (this._mute || sound == null || sound.length == 0) {
-      return Future.value();
+  Future _playSound(String sound) async {
+    if (_mute || sound.isEmpty) return;
+    final player = AudioPlayer();
+    try {
+      await player.setAsset('assets/sounds/$sound');
+      await player.play();
+    } catch (e) {
+      // Asset may be missing or unsupported; ignore
+    } finally {
+      player.dispose();
     }
-    //audioCache.duckAudio = true;
-    //return audioCache.play("sounds/" + sound);
-    AssetsAudioPlayer.newPlayer().open(
-      Audio("assets/sounds/" + sound),
-      showNotification: false,
-      autoStart: true,
-    );
-
-    return Future.value();
   }
 
   _startRest() {

@@ -4,7 +4,7 @@ abstract class TabatamanagerState {
   final List<Tabata> tabatas;
   TabatamanagerState(this.tabatas);
 
-  Tabata getTabataByName(String name) {
+  Tabata? getTabataByName(String name) {
     for (var t in this.tabatas) {
       if (t.name == name) return t;
     }

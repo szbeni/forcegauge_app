@@ -11,7 +11,7 @@ import 'device_settings.dart';
 class DeviceList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final itemNameStyle = Theme.of(context).textTheme.headline6;
+    final itemNameStyle = Theme.of(context).textTheme.titleLarge;
 
     return BlocBuilder<DevicemanagerCubit, DevicemanagerState>(
       builder: (context, state) {

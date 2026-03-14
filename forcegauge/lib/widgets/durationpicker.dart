@@ -9,11 +9,11 @@ class DurationPickerDialog extends StatefulWidget {
   final Widget cancelWidget;
 
   DurationPickerDialog({
-    @required this.initialDuration,
-    this.title,
-    this.titlePadding,
-    Widget confirmWidget,
-    Widget cancelWidget,
+    required this.initialDuration,
+    required this.title,
+    required this.titlePadding,
+    required Widget confirmWidget,
+    required Widget cancelWidget,
   })  : confirmWidget = confirmWidget ?? new Text('OK'),
         cancelWidget = cancelWidget ?? new Text('CANCEL');
 
@@ -22,13 +22,16 @@ class DurationPickerDialog extends StatefulWidget {
 }
 
 class _DurationPickerDialogState extends State<DurationPickerDialog> {
-  int minutes;
-  int seconds;
+  late int minutes;
+  late int seconds;
 
   _DurationPickerDialogState(Duration initialDuration) {
     minutes = initialDuration.inMinutes;
     seconds = initialDuration.inSeconds % Duration.secondsPerMinute;
   }
+
+  static bool _isEmptyContainer(Widget w) =>
+      w is Container && (w as Container).child == null;
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +72,15 @@ class _DurationPickerDialogState extends State<DurationPickerDialog> {
       actions: [
         new TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: widget.cancelWidget,
+          child: _isEmptyContainer(widget.cancelWidget)
+              ? Text('CANCEL')
+              : widget.cancelWidget,
         ),
         new TextButton(
           onPressed: () => Navigator.of(context).pop(new Duration(minutes: minutes, seconds: seconds)),
-          child: widget.confirmWidget,
+          child: _isEmptyContainer(widget.confirmWidget)
+              ? Text('OK')
+              : widget.confirmWidget,
         ),
       ],
     );

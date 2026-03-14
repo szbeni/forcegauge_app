@@ -14,18 +14,52 @@ class HistoryListScreen extends StatefulWidget {
 }
 
 class HistoryListScreenState extends State<HistoryListScreen> {
-  // Build the whole screen
+  Future<void> _confirmClearAll(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Clear all history?'),
+          content: const Text(
+            'This will permanently delete all workout history. This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Delete all', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == true && context.mounted) {
+      BlocProvider.of<ReportmanagerCubit>(context).clearAllReports();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       body: Column(children: [
         Expanded(child: HistoryList()),
       ]),
-      // floatingActionButton: new FloatingActionButton(
-      //   onPressed: () => addNewHistoryDialog(context),
-      //   tooltip: 'Add History',
-      //   child: new Icon(Icons.add),
-      // ),
+      floatingActionButton: BlocBuilder<ReportmanagerCubit, ReportmanagerState>(
+        builder: (context, state) {
+          if (state is ReportmanagerInitial || state.reports.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return FloatingActionButton(
+            onPressed: () => _confirmClearAll(context),
+            tooltip: 'Clear all history',
+            backgroundColor: Theme.of(context).colorScheme.error,
+            child: const Icon(Icons.delete_forever),
+          );
+        },
+      ),
     );
   }
 }
@@ -34,7 +68,7 @@ class HistoryList extends StatelessWidget {
   const HistoryList();
   @override
   Widget build(BuildContext context) {
-    final itemNameStyle = Theme.of(context).textTheme.headline6;
+    final itemNameStyle = Theme.of(context).textTheme.titleLarge;
     return BlocBuilder<ReportmanagerCubit, ReportmanagerState>(
       builder: (context, state) {
         if (state is ReportmanagerInitial || state.reports.length == 0) {

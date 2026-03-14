@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forcegauge/bloc/cubit/device_cubit.dart';
 import 'package:forcegauge/bloc/cubit/settings_cubit.dart';
+import 'package:forcegauge/models/devices/device_data.dart';
 import 'package:forcegauge/screens/min_max_tab/realtime_chart.dart';
 
 class DeviceGraphView extends StatefulWidget {
@@ -15,6 +16,9 @@ class DeviceGraphView extends StatefulWidget {
 }
 
 class _DeviceGraphViewState extends State<DeviceGraphView> {
+  bool _chartPaused = false;
+  List<DeviceData>? _frozenData;
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DeviceCubit, DeviceState>(builder: (context, state) {
@@ -66,6 +70,27 @@ class _DeviceGraphViewState extends State<DeviceGraphView> {
                       shape: CircleBorder(),
                     );
 
+                    var pauseButton = MaterialButton(
+                      onPressed: () {
+                        setState(() {
+                          _chartPaused = !_chartPaused;
+                          if (_chartPaused) {
+                            _frozenData = List.from(state.device.getHistoricalData());
+                          } else {
+                            _frozenData = null;
+                          }
+                        });
+                      },
+                      color: BlocProvider.of<SettingsCubit>(context).settings.primarySwatch,
+                      textColor: Colors.white,
+                      child: Icon(
+                        _chartPaused ? Icons.play_arrow : Icons.pause,
+                        size: 24,
+                      ),
+                      padding: EdgeInsets.all(16),
+                      shape: CircleBorder(),
+                    );
+
                     var statusIcon = Icon(Icons.radio_button_checked, color: Colors.red);
                     if (state.device.isConnected()) statusIcon = Icon(Icons.radio_button_checked, color: Colors.green);
 
@@ -110,22 +135,26 @@ class _DeviceGraphViewState extends State<DeviceGraphView> {
                             //width: 250,
                             child: Text("Max: $maxStr", style: textStyleLarge)),
                         Row(
-                          //mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             clearButton,
                             zeroOffsetButton,
+                            pauseButton,
                           ],
                         ),
+                        if (_chartPaused)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text('Chart paused – tap resume to continue', style: textStyleSmall),
+                          ),
                       ],
                     );
                   }),
                   //EvenMoreRealtime(),
                   Container(
                     height: 280,
-                    //padding: EdgeInsets.all(0),
                     child: Card(
-                      //child: Container(),
-                      child: EvenMoreRealtime(false, 0.0),
+                      child: EvenMoreRealtime(false, 0.0, frozenData: _frozenData),
                     ),
                   ),
                 ],

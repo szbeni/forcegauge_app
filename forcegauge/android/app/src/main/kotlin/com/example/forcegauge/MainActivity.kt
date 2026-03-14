@@ -1,6 +1,5 @@
-package com.github.szbeni.forcegauge
+package com.example.forcegauge
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity: FlutterActivity() {
-}
+class MainActivity : FlutterActivity()

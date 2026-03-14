@@ -1,315 +1,168 @@
-// import 'package:flutter/material.dart';
-
-// class EvenMoreRealtime extends StatefulWidget {
-//   @override
-//   _EvenMoreRealtimeState createState() => _EvenMoreRealtimeState();
-// }
-
-// class _EvenMoreRealtimeState extends State<EvenMoreRealtime> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container();
-//   }
-// }
-
-import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:forcegauge/bloc/cubit/device_cubit.dart';
-import 'package:mp_chart/mp/chart/line_chart.dart';
-import 'package:mp_chart/mp/controller/line_chart_controller.dart';
-import 'package:mp_chart/mp/core/common_interfaces.dart';
-import 'package:mp_chart/mp/core/data/line_data.dart';
-import 'package:mp_chart/mp/core/data_interfaces/i_line_data_set.dart';
-import 'package:mp_chart/mp/core/data_set/line_data_set.dart';
-import 'package:mp_chart/mp/core/description.dart';
-import 'package:mp_chart/mp/core/entry/entry.dart';
-import 'package:mp_chart/mp/core/enums/axis_dependency.dart';
-import 'package:mp_chart/mp/core/enums/legend_form.dart';
-import 'package:mp_chart/mp/core/highlight/highlight.dart';
-import 'package:mp_chart/mp/core/utils/color_utils.dart';
+import 'package:forcegauge/bloc/cubit/settings_cubit.dart';
+import 'package:forcegauge/models/devices/device_data.dart';
 
-class EvenMoreRealtime extends StatefulWidget {
-  @required
+class EvenMoreRealtime extends StatelessWidget {
   final bool showOnlyAbsolute;
   final double targetForce;
-  const EvenMoreRealtime(this.showOnlyAbsolute, this.targetForce);
+  /// When non-null, chart shows this snapshot instead of live data (e.g. when paused).
+  final List<DeviceData>? frozenData;
 
-  @override
-  State<StatefulWidget> createState() {
-    return EvenMoreRealtimeState();
-  }
-}
-
-class EvenMoreRealtimeState extends State<EvenMoreRealtime> implements OnChartValueSelectedListener {
-  LineChartController controller;
-  var random = Random(1);
-  var isMultipleRun = false;
-
-  @override
-  void initState() {
-    _initController();
-    Timer.periodic(Duration(milliseconds: 50), (timer) {
-      controller.state?.setStateIfNotDispose();
-    });
-    super.initState();
-  }
+  const EvenMoreRealtime(this.showOnlyAbsolute, this.targetForce, {super.key, this.frozenData});
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<DeviceCubit, DeviceState>(
-        listener: (context, state) {
-          if (state is DeviceStateNewStatus) {
-            print("New status: ${state.status}");
-            if (state.status == "Connected") {
-              print("Clearchart");
-              _clearChart();
-            }
-          } else if (state is DeviceStateNewMessage) {
-            _addData(state.device.lastData.time, state.device.lastData.value, state.device.minValue, state.device.maxValue);
+    return BlocBuilder<DeviceCubit, DeviceState>(
+      buildWhen: (prev, curr) => true,
+      builder: (context, state) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final chartBg = isDark ? const Color(0xFF121212) : Colors.white;
+        final axisColor = isDark ? Colors.grey[400]! : const Color(0xFF424242);
+        final device = state.device;
+        final historicalData = frozenData ?? device.getHistoricalData();
+        final primaryColor = context.read<SettingsCubit>().settings.primarySwatch;
+
+        if (historicalData.isEmpty) {
+          return Container(
+            height: 280,
+            alignment: Alignment.center,
+            child: Text(
+              'No data yet',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey,
+                  ),
+            ),
+          );
+        }
+
+        final spots = <FlSpot>[];
+        for (final d in historicalData) {
+          final x = d.time.toDouble();
+          final y = showOnlyAbsolute ? d.value.abs() : d.value.toDouble();
+          if (x.isFinite && y.isFinite) spots.add(FlSpot(x, y));
+        }
+        if (spots.isEmpty) {
+          return Container(
+            height: 280,
+            alignment: Alignment.center,
+            child: Text('No data yet', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey)),
+          );
+        }
+        if (spots.length < 2) {
+          spots.add(FlSpot(spots.first.x + 0.1, spots.first.y));
+        }
+
+        double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+        double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+        if (maxY <= minY) maxY = minY + 1.0;
+        if (showOnlyAbsolute && targetForce > 0) {
+          minY = 0;
+          final dataMax = maxY;
+          final targetMax = targetForce * 1.2;
+          maxY = dataMax > targetMax ? dataMax : targetMax;
+          const double step = 10.0;
+          maxY = (maxY / step).ceilToDouble() * step;
+          if (maxY < 10) maxY = 10;
+        } else {
+          const double minRange = 20.0;
+          const double step = 10.0;
+          double range = maxY - minY;
+          if (range < minRange) {
+            final pad = (minRange - range) / 2;
+            minY -= pad;
+            maxY += pad;
+            range = minRange;
           }
-        },
-        child: getBody());
-  }
+          minY = (minY / step).floorToDouble() * step;
+          maxY = (maxY / step).ceilToDouble() * step;
+          if (maxY <= minY) maxY = minY + step;
+          if (maxY - minY < minRange) {
+            minY = (minY / step).floorToDouble() * step;
+            maxY = minY + minRange;
+          }
+        }
 
-  Widget getBody() {
-    return Container(child: LineChart(controller));
-  }
+        final minX = spots.map((s) => s.x).reduce((a, b) => a < b ? a : b);
+        final maxX = spots.map((s) => s.x).reduce((a, b) => a > b ? a : b);
+        final rangeX = maxX - minX;
+        final paddedMinX = rangeX > 0 ? minX - rangeX * 0.02 : minX - 0.1;
+        final paddedMaxX = rangeX > 0 ? maxX + rangeX * 0.02 : maxX + 0.1;
+        if (paddedMaxX <= paddedMinX) return Container(height: 280, alignment: Alignment.center, child: Text('No data yet', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey)));
 
-  String getTitle() {
-    return "Even More Realtime";
-  }
+        final lineData = LineChartData(
+          minX: paddedMinX,
+          maxX: paddedMaxX,
+          minY: minY,
+          maxY: maxY,
+          backgroundColor: chartBg,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: Colors.grey.withValues(alpha: 0.2),
+              strokeWidth: 1,
+            ),
+          ),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) => Text(
+                  value.toStringAsFixed(0),
+                  style: TextStyle(color: axisColor, fontSize: 10),
+                ),
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: false,
+              color: primaryColor,
+              barWidth: 2,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(show: false),
+            ),
+          ],
+          lineTouchData: LineTouchData(
+            enabled: true,
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipItems: (touchedSpots) => touchedSpots
+                  .map((s) => LineTooltipItem(
+                        s.y.toStringAsFixed(1),
+                        TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        );
 
-  void itemClick(String action) {
-    if (controller.state == null) {
-      return;
-    }
-
-    switch (action) {
-      case 'A':
-        //Util.openGithub();
-        break;
-      case 'B':
-        _addEntry();
-        controller.state.setStateIfNotDispose();
-        break;
-      case 'C':
-        _clearChart();
-        controller.state.setStateIfNotDispose();
-        break;
-      case 'D':
-        _addMultiple();
-        controller.state.setStateIfNotDispose();
-        break;
-      case 'E':
-        // captureImg(() {
-        //   controller.state.capture();
-        // });
-        break;
-      case 'F':
-        _updateEntry();
-        break;
-    }
-  }
-
-  void _initController() {
-    var desc = Description()..enabled = false;
-    controller = LineChartController(
-        legendSettingFunction: (legend, controller) {
-          legend
-            ..shape = LegendForm.LINE
-            //..typeface = Util.LIGHT
-            ..textColor = ColorUtils.WHITE;
-        },
-        xAxisSettingFunction: (xAxis, controller) {
-          xAxis
-            //..typeface = Util.LIGHT
-            ..textColor = ColorUtils.WHITE
-            ..drawGridLines = true
-            ..avoidFirstLastClipping = true
-            ..enabled = true;
-        },
-        axisLeftSettingFunction: (axisLeft, controller) {
-          axisLeft
-            //..typeface = Util.LIGHT
-            ..textColor = ColorUtils.GRAY
-            ..drawGridLines = true;
-        },
-        axisRightSettingFunction: (axisRight, controller) {
-          axisRight.enabled = false;
-        },
-        drawGridBackground: false,
-        dragXEnabled: false,
-        dragYEnabled: false,
-        scaleXEnabled: false,
-        scaleYEnabled: false,
-        backgroundColor: ColorUtils.WHITE,
-        selectionListener: this,
-        pinchZoomEnabled: false,
-        description: desc);
-
-    LineData data = controller?.data;
-
-    if (data == null) {
-      data = LineData();
-      controller.data = data;
-    }
-  }
-
-  @override
-  void onNothingSelected() {}
-
-  @override
-  void onValueSelected(Entry e, Highlight h) {}
-
-  void _addData(double newX, double newY, double yMin, double yMax) {
-    LineData data = controller.data;
-
-    if (data != null) {
-      ILineDataSet set = data.getDataSetByIndex(0);
-      // set.addEntry(...); // can be called as well
-
-      if (set == null) {
-        set = _createSet();
-        data.addDataSet(set);
-      }
-      if (widget.showOnlyAbsolute) newY = newY.abs();
-
-      data.addEntry(Entry(x: newX, y: newY), 0);
-      if (data.dataSets[0].getEntryCount() > 800) {
-        data.dataSets[0].removeFirst();
-      }
-
-      if (widget.showOnlyAbsolute) {
-        yMin = 0;
-        yMax = widget.targetForce * 1.2;
-        if (data.yMax > yMax) yMax = data.yMax;
-      }
-
-      if (yMin > 0) yMin = 0;
-      if (yMax < 0) yMax = 0;
-
-      if (yMax < 5) yMax = 5;
-      if (yMin > -5) yMin = -5;
-      controller.axisLeft.setAxisMinimum(yMin);
-      controller.axisLeft.setAxisMaximum(yMax);
-      data.notifyDataChanged();
-      //controller.moveViewToY(0, AxisDependency.LEFT);
-      //controller.axisLeft.setStartAtZero(false);
-
-      // limit the number of visible entries
-      //controller.setVisibleXRangeMaximum(1000);
-      // chart.setVisibleYRange(30, AxisDependency.LEFT);
-
-      // move to the latest entry
-      //controller.moveViewToX(data.getEntryCount().toDouble());
-
-      //controller.state?.setStateIfNotDispose();
-    }
-  }
-
-  void _addEntry() {
-    // LineData data = controller.data;
-
-    // if (data != null) {
-    //   ILineDataSet set = data.getDataSetByIndex(0);
-    //   // set.addEntry(...); // can be called as well
-
-    //   if (set == null) {
-    //     set = _createSet();
-    //     data.addDataSet(set);
-    //   }
-
-    //   data.addEntry(
-    //       Entry(
-    //           x: set.getEntryCount().toDouble(),
-    //           y: (random.nextDouble() * 40) + 30.0),
-    //       0);
-    //   data.notifyDataChanged();
-
-    //   // limit the number of visible entries
-    //   controller.setVisibleXRangeMaximum(1000);
-    //   // chart.setVisibleYRange(30, AxisDependency.LEFT);
-
-    //   // move to the latest entry
-    //   controller.moveViewToX(data.getEntryCount().toDouble());
-
-    //   controller.state?.setStateIfNotDispose();
-    // }
-  }
-
-  void _updateEntry() {
-    LineData data = controller.data;
-
-    if (data != null) {
-      ILineDataSet set = data.getDataSetByIndex(0);
-      // set.addEntry(...); // can be called as well
-
-      if (set == null) {
-        set = _createSet();
-        data.addDataSet(set);
-      }
-
-      if (set.getEntryCount() == 0) {
-        return;
-      }
-
-      //for test ChartData's updateEntryByIndex
-      var index = (random.nextDouble() * set.getEntryCount()).toInt();
-      var x = set.getEntryForIndex(index).x;
-      data.updateEntryByIndex(index, Entry(x: x, y: (random.nextDouble() * 40) + 30.0), 0);
-
-      data.notifyDataChanged();
-
-      // limit the number of visible entries
-      controller.setVisibleXRangeMaximum(120);
-      // chart.setVisibleYRange(30, AxisDependency.LEFT);
-
-      // move to the latest entry
-      controller.moveViewToX(data.getEntryCount().toDouble());
-
-      controller.state?.setStateIfNotDispose();
-    }
-  }
-
-  void _clearChart() {
-    controller.data?.clearValues();
-    controller.state?.setStateIfNotDispose();
-  }
-
-  void _addMultiple() {
-    if (isMultipleRun) {
-      return;
-    }
-
-    isMultipleRun = true;
-    var i = 0;
-    Timer.periodic(Duration(milliseconds: 25), (timer) {
-      _addEntry();
-      if (i++ > 1000) {
-        timer.cancel();
-        isMultipleRun = false;
-      }
-    });
-  }
-
-  LineDataSet _createSet() {
-    LineDataSet set = LineDataSet(null, "Dynamic Data");
-    set.setAxisDependency(AxisDependency.LEFT);
-    set.setColor1(ColorUtils.getHoloBlue());
-    set.setDrawCircles(false);
-    set.setCircleColor(ColorUtils.WHITE);
-    set.setLineWidth(3.0);
-    set.setCircleRadius(4.0);
-    set.setFillAlpha(65);
-    set.setFillColor(ColorUtils.getHoloBlue());
-    set.setHighLightColor(Color.fromARGB(255, 244, 117, 117));
-    set.setValueTextColor(ColorUtils.WHITE);
-    set.setValueTextSize(9.0);
-    set.setDrawValues(false);
-    return set;
+        return Container(
+          color: chartBg,
+          padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+          child: LineChart(
+            lineData,
+            duration: Duration.zero,
+          ),
+        );
+      },
+    );
   }
 }
+

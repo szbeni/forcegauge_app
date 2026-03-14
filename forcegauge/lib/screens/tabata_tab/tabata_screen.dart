@@ -13,7 +13,7 @@ class TabataScreen extends StatefulWidget {
   final Tabata tabata;
 
   TabataScreen({
-    @required this.tabata,
+    required this.tabata,
   });
 
   @override
@@ -21,7 +21,7 @@ class TabataScreen extends StatefulWidget {
 }
 
 class _TabataScreenState extends State<TabataScreen> {
-  Tabata _tabata;
+  late Tabata _tabata;
 
   @override
   initState() {
@@ -58,6 +58,9 @@ class _TabataScreenState extends State<TabataScreen> {
                         initialValue: _tabata.sets,
                         step: 1,
                         title: Text('Sets in the workout'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((sets) {
@@ -81,6 +84,9 @@ class _TabataScreenState extends State<TabataScreen> {
                         initialValue: _tabata.reps,
                         step: 1,
                         title: Text('Repetitions in each set'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((reps) {
@@ -104,6 +110,9 @@ class _TabataScreenState extends State<TabataScreen> {
                       return DurationPickerDialog(
                         initialDuration: _tabata.startDelay,
                         title: Text('Countdown before starting workout'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((startDelay) {
@@ -124,6 +133,9 @@ class _TabataScreenState extends State<TabataScreen> {
                       return DurationPickerDialog(
                         initialDuration: _tabata.exerciseTime,
                         title: Text('Excercise time per repetition'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((exerciseTime) {
@@ -144,6 +156,9 @@ class _TabataScreenState extends State<TabataScreen> {
                       return DurationPickerDialog(
                         initialDuration: _tabata.restTime,
                         title: Text('Rest time between repetitions'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((restTime) {
@@ -164,6 +179,9 @@ class _TabataScreenState extends State<TabataScreen> {
                       return DurationPickerDialog(
                         initialDuration: _tabata.breakTime,
                         title: Text('Break time between sets'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((breakTime) {
@@ -184,6 +202,9 @@ class _TabataScreenState extends State<TabataScreen> {
                       return DurationPickerDialog(
                         initialDuration: _tabata.warningBeforeBreakEndsTime,
                         title: Text('Warning before break ends'),
+                        titlePadding: EdgeInsets.all(0),
+                        confirmWidget: Container(),
+                        cancelWidget: Container(),
                       );
                     },
                   ).then((warningBeforeBreakEndsTime) {

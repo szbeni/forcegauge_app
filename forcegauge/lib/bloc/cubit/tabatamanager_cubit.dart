@@ -48,7 +48,7 @@ class TabatamanagerCubit extends Cubit<TabatamanagerState> {
   }
 
   void removeTabata(String name) {
-    Tabata tabata = state.getTabataByName(name);
+    Tabata? tabata = state.getTabataByName(name);
     if (tabata != null) {
       state.tabatas.remove(tabata);
       emit(TabatamanagerUpdated(state.tabatas));

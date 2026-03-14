@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 
 class DecimalPickerDialog extends StatefulWidget {
-  final num initialValue;
-  final num min;
-  final num max;
-  num step = 1;
-  num decimals = 1;
-  num acceleration = 0.1;
+  final double initialValue;
+  final double min;
+  final double max;
+  double step = 1;
+  int decimals = 1;
+  double acceleration = 0.1;
   final EdgeInsets titlePadding;
   final Widget title;
   final Widget confirmWidget;
   final Widget cancelWidget;
 
   DecimalPickerDialog({
-    @required this.initialValue,
-    @required this.min,
-    @required this.max,
-    this.step,
-    this.decimals,
-    this.acceleration,
-    this.title,
-    this.titlePadding,
-    Widget confirmWidget,
-    Widget cancelWidget,
+    required this.initialValue,
+    required this.min,
+    required this.max,
+    required this.step,
+    required this.decimals,
+    required this.acceleration,
+    required this.title,
+    required this.titlePadding,
+    required Widget confirmWidget,
+    required Widget cancelWidget,
   })  : confirmWidget = confirmWidget ?? new Text('OK'),
         cancelWidget = cancelWidget ?? new Text('CANCEL');
 
@@ -32,11 +32,14 @@ class DecimalPickerDialog extends StatefulWidget {
 }
 
 class _DecimalPickerDialogState extends State<DecimalPickerDialog> {
-  num value;
+  late double value;
 
-  _DecimalPickerDialogState(num initialValue) {
+  _DecimalPickerDialogState(double initialValue) {
     value = initialValue;
   }
+
+  static bool _isEmptyContainer(Widget w) =>
+      w is Container && (w as Container).child == null;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +52,7 @@ class _DecimalPickerDialogState extends State<DecimalPickerDialog> {
           child: SpinBox(
               min: widget.min,
               max: widget.max,
-              value: value == null ? 0 : value,
+              value: value,
               decimals: widget.decimals,
               step: widget.step,
               acceleration: widget.acceleration,
@@ -63,11 +66,15 @@ class _DecimalPickerDialogState extends State<DecimalPickerDialog> {
       actions: [
         new TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: widget.cancelWidget,
+          child: _isEmptyContainer(widget.cancelWidget)
+              ? Text('CANCEL')
+              : widget.cancelWidget,
         ),
         new TextButton(
           onPressed: () => Navigator.of(context).pop(value),
-          child: widget.confirmWidget,
+          child: _isEmptyContainer(widget.confirmWidget)
+              ? Text('OK')
+              : widget.confirmWidget,
         ),
       ],
     );

@@ -36,14 +36,14 @@ class Tabata {
   Duration warningBeforeBreakEndsTime;
 
   Tabata({
-    this.name,
-    this.sets,
-    this.reps,
-    this.startDelay,
-    this.exerciseTime,
-    this.restTime,
-    this.breakTime,
-    this.warningBeforeBreakEndsTime,
+    required this.name,
+    required this.sets,
+    required this.reps,
+    required this.startDelay,
+    required this.exerciseTime,
+    required this.restTime,
+    required this.breakTime,
+    required this.warningBeforeBreakEndsTime,
   });
 
   Duration getTotalTime() {
