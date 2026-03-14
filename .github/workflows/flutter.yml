@@ -1,32 +1,18 @@
-name: Build
+name: Build and Release
 
 on:
   push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+    tags:
+      - 'v*'
 
 jobs:
   build:
     name: Forcegauge app
     runs-on: ubuntu-latest
-    environment: googleplay
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Decode Android Keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > forcegauge/key.jks
-
-      - name: Create key.properties
-        run: |
-          cd forcegauge
-          echo "storeFile=../key.jks" > android/key.properties
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -34,21 +20,19 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Build App Bundle
+      - name: Build APK and App Bundle
         run: |
           cd forcegauge
           flutter pub get
           flutter build apk --release --split-per-abi
           flutter build appbundle
 
-      - name: Upload App Bundle
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: appbundle
-          path: forcegauge/build/app/outputs/bundle/release/app-release.aab
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: forcegauge/build/app/outputs/flutter-apk/*.apk
+          generate_release_notes: true
+          files: |
+            forcegauge/build/app/outputs/flutter-apk/*.apk
+            forcegauge/build/app/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
