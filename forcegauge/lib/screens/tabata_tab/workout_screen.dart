@@ -151,13 +151,13 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           create: (_) => DeviceCubit(state.devices[connectedDeviceNum]),
           child: BlocBuilder<DeviceCubit, DeviceState>(builder: (context, state) {
             if (_workout.step == WorkoutState.exercising) {
-              return Container(width: 200, child: EvenMoreRealtime(true, widget.targetForce));
+              return SizedBox(width: 200, height: 180, child: EvenMoreRealtime(true, widget.targetForce));
             } else {
               var lastReport = _workout.workoutReport.getSetRepReport(_workout.set, _workout.rep);
               if (lastReport != null && lastReport.getValues().isNotEmpty) {
-                return Container(width: 200, child: ReportGraph(lastReport));
+                return SizedBox(width: 200, height: 180, child: ReportGraph(lastReport));
               }
-              return Container();
+              return SizedBox(width: 200, height: 180);
             }
           }),
         );
@@ -204,60 +204,88 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
         timeDisplay = formatTime(_workout.getTimeRemaning());
       }
       tabataScreen = Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Container(height: 20),
+          // Scrollable content (chart + rest); scale down when doesn't fit
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [graphWidget],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth,
+                      maxHeight: constraints.maxHeight,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [graphWidget],
+                            ),
+                          ),
+                          Divider(height: 1, color: lightTextColor),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [Text(Workout.stepName(_workout.step), style: TextStyle(fontSize: 60.0, color: primaryTextColor))],
+                          ),
+                          Divider(height: 1, color: lightTextColor),
+                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [forceTextBox]),
+                          Divider(height: 1, color: lightTextColor),
+                          Container(width: MediaQuery.of(context).size.width, child: FittedBox(child: Text(formatTime(_workout.timeLeft), style: TextStyle(color: primaryTextColor)))),
+                          Divider(height: 1, color: lightTextColor),
+                          Table(columnWidths: {
+                            0: FlexColumnWidth(0.5),
+                            1: FlexColumnWidth(0.5),
+                            2: FlexColumnWidth(1.0)
+                          }, children: [
+                            TableRow(children: [
+                              TableCell(child: Text('Set', style: TextStyle(fontSize: 30.0, color: primaryTextColor))),
+                              TableCell(child: Text('Rep', style: TextStyle(fontSize: 30.0, color: primaryTextColor))),
+                              TableCell(child: Text(timeDisplayText, textAlign: TextAlign.end, style: TextStyle(fontSize: 30.0, color: primaryTextColor)))
+                            ]),
+                            TableRow(children: [
+                              TableCell(
+                                child: Text('${_workout.set}', style: TextStyle(fontSize: 60.0, color: primaryTextColor)),
+                              ),
+                              TableCell(
+                                child: Text('${_workout.rep}', style: TextStyle(fontSize: 60.0, color: primaryTextColor)),
+                              ),
+                              TableCell(
+                                  child: TextButton(
+                                      style: TextButton.styleFrom(foregroundColor: primaryTextColor, padding: EdgeInsets.zero),
+                                      onPressed: () {
+                                        setState(() {
+                                          totalTimeDisplay = !totalTimeDisplay;
+                                        });
+                                      },
+                                      child: Text(
+                                        timeDisplay,
+                                        style: TextStyle(fontSize: 60.0, color: primaryTextColor),
+                                        textAlign: TextAlign.right,
+                                      )))
+                            ]),
+                          ]),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           Divider(height: 1, color: lightTextColor),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [Text(Workout.stepName(_workout.step), style: TextStyle(fontSize: 60.0, color: primaryTextColor))],
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: _buildButtonBar(),
+            ),
           ),
-          Divider(height: 1, color: lightTextColor),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [forceTextBox]),
-          Divider(height: 1, color: lightTextColor),
-          Container(width: MediaQuery.of(context).size.width, child: FittedBox(child: Text(formatTime(_workout.timeLeft), style: TextStyle(color: primaryTextColor)))),
-          Divider(height: 1, color: lightTextColor),
-          Table(columnWidths: {
-            0: FlexColumnWidth(0.5),
-            1: FlexColumnWidth(0.5),
-            2: FlexColumnWidth(1.0)
-          }, children: [
-            TableRow(children: [
-              TableCell(child: Text('Set', style: TextStyle(fontSize: 30.0, color: primaryTextColor))),
-              TableCell(child: Text('Rep', style: TextStyle(fontSize: 30.0, color: primaryTextColor))),
-              TableCell(child: Text(timeDisplayText, textAlign: TextAlign.end, style: TextStyle(fontSize: 30.0, color: primaryTextColor)))
-            ]),
-            TableRow(children: [
-              TableCell(
-                child: Text('${_workout.set}', style: TextStyle(fontSize: 60.0, color: primaryTextColor)),
-              ),
-              TableCell(
-                child: Text('${_workout.rep}', style: TextStyle(fontSize: 60.0, color: primaryTextColor)),
-              ),
-              TableCell(
-                  child: TextButton(
-                      style: TextButton.styleFrom(foregroundColor: primaryTextColor, padding: EdgeInsets.zero),
-                      onPressed: () {
-                        setState(() {
-                          totalTimeDisplay = !totalTimeDisplay;
-                        });
-                      },
-                      child: Text(
-                        timeDisplay,
-                        style: TextStyle(fontSize: 60.0, color: primaryTextColor),
-                        textAlign: TextAlign.right,
-                      )))
-            ]),
-          ]),
-          Divider(height: 1, color: lightTextColor),
-          _buildButtonBar(),
         ],
       );
     }
