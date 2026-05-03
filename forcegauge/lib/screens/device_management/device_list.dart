@@ -2,34 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forcegauge/bloc/cubit/device_cubit.dart';
 import 'package:forcegauge/bloc/cubit/devicemanager_cubit.dart';
-import 'package:forcegauge/bloc/cubit/settings_cubit.dart';
 import 'package:forcegauge/bloc/cubit/tabatamanager_cubit.dart';
-import 'package:forcegauge/models/devices/device.dart';
 
 import 'device_settings.dart';
 
 class DeviceList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final itemNameStyle = Theme.of(context).textTheme.titleLarge;
-
     return BlocBuilder<DevicemanagerCubit, DevicemanagerState>(
       builder: (context, state) {
         if (state is DevicemanagerInitial) {
-          //return const CircularProgressIndicator();
           return const Text('Add a new device');
-        } else {
-          return ListView.builder(
-              key: UniqueKey(),
-              itemCount: state.devices.length,
-              itemBuilder: (context, index) {
-                return BlocProvider<DeviceCubit>(
-                  create: (_) => DeviceCubit(state.devices[index]),
-                  child: DeviceListTile(),
-                );
-              });
         }
-        return const Text('Something went wrong!');
+        return ListView.builder(
+          itemCount: state.devices.length,
+          itemBuilder: (context, index) {
+            final device = state.devices[index];
+            return Dismissible(
+              key: ValueKey(device.getUrl()),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                color: Theme.of(context).colorScheme.error,
+                child: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.onError,
+                  size: 28,
+                ),
+              ),
+              onDismissed: (_) {
+                context.read<DevicemanagerCubit>().removeDevice(device.name);
+              },
+              child: BlocProvider<DeviceCubit>(
+                create: (_) => DeviceCubit(device),
+                child: DeviceListTile(),
+              ),
+            );
+          },
+        );
       },
     );
   }

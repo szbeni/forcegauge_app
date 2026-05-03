@@ -42,7 +42,8 @@ class _AddNewDeviceScreenState extends State<AddNewDeviceScreen> {
                 deviceUrl = url;
               },
               decoration: new InputDecoration(
-                  hintText: 'Enter device URL. ex.: ws://192.168.4.1:81',
+                  hintText:
+                      'Wi‑Fi: ws://192.168.4.1:81  ·  Tindeq: tindeq://AA:BB:… (use Bluetooth scan on phone)',
                   contentPadding: const EdgeInsets.all(16.0)),
             )
           ],

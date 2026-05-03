@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 //import 'package:flutter_cache_manager/file.dart';
 //import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:forcegauge/models/devices/device_link.dart';
+import 'package:forcegauge/models/devices/tindeq_progressor_link.dart';
 import 'package:forcegauge/models/socket_manager.dart';
 import 'package:forcegauge/models/tabata/tabata.dart';
 import 'package:http/http.dart' as http;
@@ -34,18 +36,21 @@ class Device extends Equatable {
   @override
   List<Object> get props => [name];
 
-  WebSocketsNotifications _socket = new WebSocketsNotifications();
+  late final DeviceLink _link = _url.startsWith('tindeq://')
+      ? TindeqProgressorLink()
+      : WebSocketsNotifications();
+
   Device(this.name, url) {
     this._url = url;
     connect();
   }
 
-  WebSocketsNotifications getSocket() {
-    return this._socket;
+  DeviceLink getSocket() {
+    return _link;
   }
 
   close() {
-    _socket.close();
+    _link.close();
   }
 
   getHistoricalData() {
@@ -69,31 +74,34 @@ class Device extends Equatable {
   }
 
   bool isConnected() {
-    return _socket.isConnected();
+    return _link.isConnected();
   }
 
   String connectionStatusMsg() {
-    return _socket.statusMsg();
+    return _link.statusMsg();
   }
 
   connect() {
-    _socket.connect(this._url);
-    _socket.addOnMessageListener(onMessage);
-    _socket.addOnStatusChangedListener(onStatusChanged);
+    _link.connect(this._url);
+    _link.addOnMessageListener(onMessage);
+    _link.addOnStatusChangedListener(onStatusChanged);
   }
 
   resetOffset() {
-    _socket.send("offset:$lastRawValue");
+    _link.send("offset:$lastRawValue");
   }
 
   sendTabatas(List<Tabata> tabatas) {
     for (var t in tabatas) {
       var tabatJson = jsonEncode(t.toJson());
-      _socket.send("add_tabata:$tabatJson");
+      _link.send("add_tabata:$tabatJson");
     }
   }
 
   Future<String> getTabatas() async {
+    if (_url.startsWith('tindeq://')) {
+      return '[]';
+    }
     try {
       var client = new http.Client();
       var url = this._url;
@@ -112,6 +120,9 @@ class Device extends Equatable {
   }
 
   Future<bool> updateFirmware() async {
+    if (_url.startsWith('tindeq://')) {
+      return false;
+    }
     try {
       //var file = await DefaultCacheManager().getSingleFile(firmwareURL);
       var file;

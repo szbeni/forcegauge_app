@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:forcegauge/models/devices/device_link.dart';
 import 'package:forcegauge/models/websocket_html.dart' if (dart.library.io) 'package:forcegauge/models/websocket_io.dart';
 
 // WebSocketsNotifications sockets = new WebSocketsNotifications();
 
-class WebSocketsNotifications extends WebsocketGetter {
+class WebSocketsNotifications extends WebsocketGetter implements DeviceLink {
   var _url;
   var _channel;
   //Connection established
